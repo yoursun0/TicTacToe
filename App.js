@@ -20,7 +20,7 @@ export default function App() {
   ];
   const [map, setMap] = useState(emptyMap);
   const [currentTurn, setCurrentTurn] = useState('x');
-  const [gameMode, setGameMode] = useState("LOCAL"); // LOCAL, BOT_EASY, BOT_MEDIUM;
+  const [gameMode, setGameMode] = useState("LOCAL"); // LOCAL, EASY, MEDIUM, HARD;
 
   useEffect(() => {
     const winner = getWinner(map);
@@ -191,34 +191,46 @@ export default function App() {
             onPress={() => setGameMode("LOCAL")}
             style={[
               styles.button,
-              { backgroundColor: gameMode === "LOCAL" ? "#9999FF" : "#FFFFFF" },
+              { backgroundColor: gameMode === "LOCAL" ? "#9999CC" : "#CCCCCC" },
             ]}
           >
             Local
           </Text>
           <Text
-            onPress={() => setGameMode("BOT_EASY")}
+            onPress={() => setGameMode("EASY")}
             style={[
               styles.button,
               {
                 backgroundColor:
-                  gameMode === "BOT_EASY" ? "#9999FF" : "#FFFFFF",
+                  gameMode === "EASY" ? "#9999CC" : "#CCCCCC",
               },
             ]}
           >
-            Easy Bot
+            Easy
           </Text>
           <Text
-            onPress={() => setGameMode("BOT_MEDIUM")}
+            onPress={() => setGameMode("MEDIUM")}
             style={[
               styles.button,
               {
                 backgroundColor:
-                  gameMode === "BOT_MEDIUM" ? "#9999FF" : "#FFFFFF",
+                  gameMode === "MEDIUM" ? "#9999CC" : "#CCCCCC",
               },
             ]}
           >
-            Medium Bot
+            Medium
+          </Text>
+          <Text
+            onPress={() => setGameMode("HARD")}
+            style={[
+              styles.button,
+              {
+                backgroundColor:
+                  gameMode === "HARD" ? "#9999CC" : "#CCCCCC",
+              },
+            ]}
+          >
+            Hard
           </Text>
         </View>
 
