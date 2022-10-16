@@ -4,7 +4,15 @@ import { StyleSheet, Text, View, Pressable, ImageBackground, Alert } from 'react
 import bg from './assets/board.png'
 import Cell from './src/components/Cell'
 
+const copyArray = (original) => {
+  const copy = original.map((arr) => {
+    return arr.slice();
+  });
+  return copy;
+}
+
 export default function App() {
+
   const emptyMap = [
     ['', '', ''], // 1st row
     ['', '', ''], // 2nd row
@@ -12,24 +20,18 @@ export default function App() {
   ];
   const [map, setMap] = useState(emptyMap);
   const [currentTurn, setCurrentTurn] = useState('x');
+  const [gameMode, setGameMode] = useState("LOCAL"); // LOCAL, BOT_EASY, BOT_MEDIUM;
 
-  const copyArray = (original) => {
-    const copy = original.map((arr) => {
-      return arr.slice();
-    });
-    return copy;
-  }
-
-  // useEffect(() => {
-  //   if (currentTurn == 'o'){
-  //     botTurn();
-  //   }
-  // }, [currentTurn]);
+  useEffect(() => {
+    if (currentTurn == 'o' && gameMode !== "LOCAL") {
+      botTurn();
+    }
+  }, [currentTurn, gameMode]);
 
   useEffect(() => {
     const winner = getWinner(map);
     if (winner) {
-      gameWon(winner)
+      gameWon(winner);
     } else {
       checkTieState();    
     }
@@ -51,18 +53,7 @@ export default function App() {
         
     setCurrentTurn(currentTurn === 'x' ? 'o' : 'x');
   };
-
-  const checkTieState = () => {
-    if (!map.some(row => row.some(cell => cell == ''))) {
-      Alert.alert(`It is a tie!`, `tie`, [
-        {
-          text: "Restart",
-          onPress: resetGame,
-        },
-      ]);
-    }
-  }
-
+  
   const getWinner = () => {
     // check rows
     for (let i = 0; i < 3; i++) {
@@ -76,12 +67,12 @@ export default function App() {
         return "o"
       }
     }
-
+    
     // check columns
     for (let col = 0; col < 3; col++) {
       let isColumnXWinner = true;
       let isColumnOWinner = true;
-
+      
       for (let row = 0; row < 3; row++) {
         if (map[row][col] != 'x') {
           isColumnXWinner = false;
@@ -90,7 +81,7 @@ export default function App() {
           isColumnOWinner = false;
         }
       }
-
+      
       if (isColumnXWinner) {
         return "x"
       }
@@ -98,13 +89,13 @@ export default function App() {
         return "o"
       }
     }
-
+    
     // check diagonals
     let isDiagnoal1OWinning = true;
     let isDiagnoal1XWinning = true;
     let isDiagnoal2OWinning = true;
     let isDiagnoal2XWinning = true;
-
+    
     for (let i = 0; i < 3; i++) {
       if (map[i][i] != 'o') {
         isDiagnoal1OWinning = false;
@@ -119,7 +110,7 @@ export default function App() {
         isDiagnoal2XWinning = false;
       }
     }
-
+    
     if (isDiagnoal1XWinning || isDiagnoal2XWinning) {
       return "x"
     }
@@ -127,7 +118,18 @@ export default function App() {
       return "o"
     }
   }
-
+  
+  const checkTieState = () => {
+    if (!map.some(row => row.some(cell => cell == ''))) {
+      Alert.alert(`It is a tie!`, `tie`, [
+        {
+          text: "Restart",
+          onPress: resetGame,
+        },
+      ]);
+    }
+  }
+  
   const gameWon = (player) => {
     Alert.alert(`Huraay`, `Player ${player} won!`, [
       {
@@ -148,7 +150,7 @@ export default function App() {
 
     map.forEach((row,rowIndex) => {
       row.forEach((cell, columnIndex) => {
-        if (cell == ''){
+        if (cell === ''){
           possiblePositions.push({
             row: rowIndex,
             col: columnIndex,
@@ -187,6 +189,41 @@ export default function App() {
             </View>
           ))}
         </View>
+        <View style={styles.buttons}>
+          <Text
+            onPress={() => setGameMode("LOCAL")}
+            style={[
+              styles.button,
+              { backgroundColor: gameMode === "LOCAL" ? "#9999FF" : "#FFFFFF" },
+            ]}
+          >
+            Local
+          </Text>
+          <Text
+            onPress={() => setGameMode("BOT_EASY")}
+            style={[
+              styles.button,
+              {
+                backgroundColor:
+                  gameMode === "BOT_EASY" ? "#9999FF" : "#FFFFFF",
+              },
+            ]}
+          >
+            Easy Bot
+          </Text>
+          <Text
+            onPress={() => setGameMode("BOT_MEDIUM")}
+            style={[
+              styles.button,
+              {
+                backgroundColor:
+                  gameMode === "BOT_MEDIUM" ? "#9999FF" : "#FFFFFF",
+              },
+            ]}
+          >
+            Medium Bot
+          </Text>
+        </View>
 
       </ImageBackground>
       <StatusBar style="auto" />
@@ -214,5 +251,17 @@ const styles = StyleSheet.create({
   row: {
     flex: 1,
     flexDirection: "row",
+  },
+  buttons: {
+    position: "absolute",
+    bottom: 50,
+    flexDirection: "row",
+  },
+  button: {
+    color: "black",
+    margin: 10,
+    fontSize: 16,
+    padding: 10,
+    paddingHorizontal: 15,
   },
 });
