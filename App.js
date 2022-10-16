@@ -23,19 +23,15 @@ export default function App() {
   const [gameMode, setGameMode] = useState("LOCAL"); // LOCAL, BOT_EASY, BOT_MEDIUM;
 
   useEffect(() => {
-    if (currentTurn == 'o' && gameMode !== "LOCAL") {
-      botTurn();
-    }
-  }, [currentTurn, gameMode]);
-
-  useEffect(() => {
     const winner = getWinner(map);
     if (winner) {
       gameWon(winner);
-    } else {
-      checkTieState();    
+    } else if (!checkTieState()) {
+      if (currentTurn == 'o' && gameMode !== "LOCAL") {
+        botTurn();
+      }
     }
-  }, [map]);
+  }, [map, currentTurn, gameMode]);
 
   const onPress = (rowIndex, columnIndex) => {
 
@@ -127,6 +123,7 @@ export default function App() {
           onPress: resetGame,
         },
       ]);
+      return 'tie';
     }
   }
   
