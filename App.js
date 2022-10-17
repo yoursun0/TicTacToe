@@ -50,11 +50,11 @@ export default function App() {
     setCurrentTurn(currentTurn === 'x' ? 'o' : 'x');
   };
   
-  const getWinner = () => {
+  const getWinner = (currentMap) => {
     // check rows
     for (let i = 0; i < 3; i++) {
-      const isRowXwinning = map[i].every(cell => cell == 'x')
-      const isRowOwinning = map[i].every(cell => cell == 'o')
+      const isRowXwinning = currentMap[i].every(cell => cell == 'x')
+      const isRowOwinning = currentMap[i].every(cell => cell == 'o')
 
       if (isRowXwinning) {
         return "x"
@@ -70,10 +70,10 @@ export default function App() {
       let isColumnOWinner = true;
       
       for (let row = 0; row < 3; row++) {
-        if (map[row][col] != 'x') {
+        if (currentMap[row][col] != 'x') {
           isColumnXWinner = false;
         }
-        if (map[row][col] != 'o') {
+        if (currentMap[row][col] != 'o') {
           isColumnOWinner = false;
         }
       }
@@ -93,16 +93,16 @@ export default function App() {
     let isDiagnoal2XWinning = true;
     
     for (let i = 0; i < 3; i++) {
-      if (map[i][i] != 'o') {
+      if (currentMap[i][i] != 'o') {
         isDiagnoal1OWinning = false;
       }
-      if (map[i][i] != 'x') {
+      if (currentMap[i][i] != 'x') {
         isDiagnoal1XWinning = false;
       }
-      if (map[i][2 - i] != 'o') {
+      if (currentMap[i][2 - i] != 'o') {
         isDiagnoal2OWinning = false;
       }
-      if (map[i][2 - i] != 'x') {
+      if (currentMap[i][2 - i] != 'x') {
         isDiagnoal2XWinning = false;
       }
     }
@@ -156,8 +156,30 @@ export default function App() {
       })
     })
 
-    // Defend
     let chosenOption = possiblePositions[Math.floor(Math.random() * possiblePositions.length)];
+    
+    if (gameMode == 'MEDIUM') {
+      console.log('now it is medium bot, possiblePositions:', possiblePositions);
+      // defend
+      possiblePositions.forEach((cell) => {
+        const tempMap = copyArray(map);
+        tempMap[cell.row][cell.col] = 'x';
+
+        if (getWinner(tempMap) == 'x'){
+          chosenOption = cell;
+        }
+      });
+
+      // attack
+      possiblePositions.forEach((cell) => {
+        const tempMap = copyArray(map);
+        tempMap[cell.row][cell.col] = 'o';
+        if (getWinner(tempMap) == 'o'){
+          chosenOption = cell;
+        }
+      });
+    }
+
     onPress(chosenOption.row, chosenOption.col);
   }
 
