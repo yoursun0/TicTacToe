@@ -27,7 +27,7 @@ export default function App() {
     if (winner) {
       gameEnd(winner);
     } else if (currentTurn == 'o' && gameMode !== "LOCAL") {
-        botTurn();
+      botTurn();
     }
   }, [map, currentTurn, gameMode]);
 
@@ -44,10 +44,10 @@ export default function App() {
       return updatedMap;
     });
 
-        
+
     setCurrentTurn(currentTurn === 'x' ? 'o' : 'x');
   };
-  
+
   const getWinner = (currentMap) => {
     // check rows
     for (let i = 0; i < 3; i++) {
@@ -61,12 +61,12 @@ export default function App() {
         return "o"
       }
     }
-    
+
     // check columns
     for (let col = 0; col < 3; col++) {
       let isColumnXWinner = true;
       let isColumnOWinner = true;
-      
+
       for (let row = 0; row < 3; row++) {
         if (currentMap[row][col] != 'x') {
           isColumnXWinner = false;
@@ -75,7 +75,7 @@ export default function App() {
           isColumnOWinner = false;
         }
       }
-      
+
       if (isColumnXWinner) {
         return "x"
       }
@@ -83,13 +83,13 @@ export default function App() {
         return "o"
       }
     }
-    
+
     // check diagonals
     let isDiagnoal1OWinning = true;
     let isDiagnoal1XWinning = true;
     let isDiagnoal2OWinning = true;
     let isDiagnoal2XWinning = true;
-    
+
     for (let i = 0; i < 3; i++) {
       if (currentMap[i][i] != 'o') {
         isDiagnoal1OWinning = false;
@@ -104,7 +104,7 @@ export default function App() {
         isDiagnoal2XWinning = false;
       }
     }
-    
+
     if (isDiagnoal1XWinning || isDiagnoal2XWinning) {
       return "x"
     }
@@ -117,11 +117,11 @@ export default function App() {
       return "t";
     }
   }
-  
+
   const nextPlayer = (player) => {
     return (player == 'x') ? 'o' : 'x';
   }
-  
+
   const gameEnd = (player) => {
     if (player == 't') {
       Alert.alert(`It is a tie`, `今次打和啦！SUPER`, [
@@ -131,7 +131,7 @@ export default function App() {
         },
       ]);
     } else {
-        Alert.alert(`Huraay`, `${(player == 'x')? '貓寶寶' : 'Coffee'} won!`, [
+      Alert.alert(`Huraay`, `${(player == 'x') ? '貓寶寶' : 'Coffee'} won!`, [
         {
           text: "Restart",
           onPress: resetGame,
@@ -148,9 +148,9 @@ export default function App() {
     // collect all possible options
     let possiblePositions = [];
 
-    currentMap.forEach((row,rowIndex) => {
+    currentMap.forEach((row, rowIndex) => {
       row.forEach((cell, columnIndex) => {
-        if (cell === ''){
+        if (cell === '') {
           possiblePositions.push({
             row: rowIndex,
             col: columnIndex,
@@ -161,7 +161,7 @@ export default function App() {
     return possiblePositions;
   }
 
-  const botTurn = () => {   
+  const botTurn = () => {
     let possiblePositions = emptySquares(map);
     let chosenOption = possiblePositions[Math.floor(Math.random() * possiblePositions.length)];
 
@@ -171,7 +171,7 @@ export default function App() {
         const tempMap = copyArray(map);
         tempMap[cell.row][cell.col] = 'x';
 
-        if (getWinner(tempMap) == 'x'){
+        if (getWinner(tempMap) == 'x') {
           chosenOption = cell;
         }
       });
@@ -180,7 +180,7 @@ export default function App() {
       possiblePositions.forEach((cell) => {
         const tempMap = copyArray(map);
         tempMap[cell.row][cell.col] = 'o';
-        if (getWinner(tempMap) == 'o'){
+        if (getWinner(tempMap) == 'o') {
           chosenOption = cell;
         }
       });
@@ -192,35 +192,56 @@ export default function App() {
   }
 
   const minimax = (board, player, cpu) => {
-    if (getWinner(board) == 'x'){
-      return { score: -1 };
-    } else if (getWinner(board) == 'o'){
-      return { score: 1 };
-    } else if (getWinner(board) == 't'){
+    if (getWinner(board) == 'x') {
+      return { score: -1 * (cpu + 1)};
+    } else if (getWinner(board) == 'o') {
+      return { score: 1 * (cpu + 1)};
+    } else if (getWinner(board) == 't') {
       return { score: 0 };
     }
-    
+
     let moves = [];
     let possiblePositions = emptySquares(board);
 
-    if (cpu == 0){
-      return {score: 0, position: possiblePositions[Math.floor(Math.random() * possiblePositions.length)]}
+    if (cpu == 0) {
+      return { score: 0, position: possiblePositions[Math.floor(Math.random() * possiblePositions.length)] }
     }
 
+    // attack
+    possiblePositions.forEach((cell) => {
+      const tempMap = copyArray(map);
+      tempMap[cell.row][cell.col] = player;
+      if (getWinner(tempMap) == player) {
+        return {score: (player == 'x')? -1: 1, position: cell};
+      }
+    });
+
+    // defend
+    possiblePositions.forEach((cell) => {
+      const tempMap = copyArray(map);
+      const tempBoard = copyArray(map);
+      tempMap[cell.row][cell.col] = nextPlayer(player);
+      tempBoard[cell.row][cell.col] = player;
+      if (getWinner(tempMap) == nextPlayer(player)) {
+        return { score: minimax(tempBoard, nextPlayer(player), cpu - 1).score, position: cell};
+      }
+    });
+
+    // otherwises
     possiblePositions.forEach((cell) => {
       const tempBoard = copyArray(board);
       tempBoard[cell.row][cell.col] = player;
-      const tempScore = minimax(tempBoard, nextPlayer(player), cpu-1).score;
-      moves.push({score: tempScore, position: cell});
+      const tempScore = minimax(tempBoard, nextPlayer(player), cpu - 1).score;
+      moves.push({ score: tempScore, position: cell });
     })
 
-    let bestMove = {score : 1000}
-    if (player == 'o'){
-      bestMove = {score : -1000};
+    let bestMove = { score: 1000 }
+    if (player == 'o') {
+      bestMove = { score: -1000 };
     }
 
     moves.forEach((move) => {
-      if ((player == 'o' && move.score > bestMove.score)||(player == 'x' && move.score < bestMove.score)){
+      if ((player == 'o' && move.score > bestMove.score) || (player == 'x' && move.score < bestMove.score)) {
         bestMove = move;
       }
     });
@@ -238,17 +259,17 @@ export default function App() {
             position: "absolute",
             top: 150,
           }}>
-            Current Turn: {(currentTurn == 'x')? '貓寶寶' : 'Coffee'}
-          </Text>
+          Current Turn: {(currentTurn == 'x') ? '貓寶寶' : 'Coffee'}
+        </Text>
         <View style={styles.map}>
           {map.map((row, rowIndex) => (
             <View key={`row-${rowIndex}`} style={styles.row}>
               {row.map((cell, columnIndex) => (
-                <Cell 
+                <Cell
                   key={`row-${rowIndex}-col-${columnIndex}`}
                   cell={cell}
                   onPress={() => onPress(rowIndex, columnIndex)}
-                  />
+                />
               ))}
             </View>
           ))}
