@@ -25,11 +25,9 @@ export default function App() {
   useEffect(() => {
     const winner = getWinner(map);
     if (winner) {
-      gameWon(winner);
-    } else if (!checkTieState()) {
-      if (currentTurn == 'o' && gameMode !== "LOCAL") {
+      gameEnd(winner);
+    } else if (currentTurn == 'o' && gameMode !== "LOCAL") {
         botTurn();
-      }
     }
   }, [map, currentTurn, gameMode]);
 
@@ -113,39 +111,44 @@ export default function App() {
     if (isDiagnoal1OWinning || isDiagnoal2OWinning) {
       return "o"
     }
+
+    // check tie
+    if (!currentMap.some(row => row.some(cell => cell == ''))) {
+      return "t";
+    }
   }
   
-  const checkTieState = () => {
-    if (!map.some(row => row.some(cell => cell == ''))) {
+  const nextPlayer = (player) => {
+    return (player == 'x') ? 'o' : 'x';
+  }
+  
+  const gameEnd = (player) => {
+    if (player == 't') {
       Alert.alert(`It is a tie!`, `tie`, [
         {
           text: "Restart",
           onPress: resetGame,
         },
       ]);
-      return 'tie';
+    } else {
+        Alert.alert(`Huraay`, `Player ${player.toUpperCase()} won!`, [
+        {
+          text: "Restart",
+          onPress: resetGame,
+        },
+      ]);
     }
   }
-  
-  const gameWon = (player) => {
-    Alert.alert(`Huraay`, `Player ${player} won!`, [
-      {
-        text: "Restart",
-        onPress: resetGame,
-      },
-    ]);
-  };
 
   const resetGame = () => {
     setMap(emptyMap);
-    setCurrentTurn('x');
   }
 
-  const botTurn = () => {
+  const emptySquares = (currentMap) => {
     // collect all possible options
     let possiblePositions = [];
 
-    map.forEach((row,rowIndex) => {
+    currentMap.forEach((row,rowIndex) => {
       row.forEach((cell, columnIndex) => {
         if (cell === ''){
           possiblePositions.push({
@@ -155,11 +158,14 @@ export default function App() {
         }
       })
     })
+    return possiblePositions;
+  }
 
+  const botTurn = () => {   
+    let possiblePositions = emptySquares(map);
     let chosenOption = possiblePositions[Math.floor(Math.random() * possiblePositions.length)];
-    
+
     if (gameMode == 'MEDIUM') {
-      console.log('now it is medium bot, possiblePositions:', possiblePositions);
       // defend
       possiblePositions.forEach((cell) => {
         const tempMap = copyArray(map);
@@ -178,9 +184,48 @@ export default function App() {
           chosenOption = cell;
         }
       });
+    } else if (gameMode == 'HARD') {
+      chosenOption = minimax(map, 'o', 6).position;
     }
 
     onPress(chosenOption.row, chosenOption.col);
+  }
+
+  const minimax = (board, player, cpu) => {
+    if (getWinner(board) == 'x'){
+      return { score: -1 };
+    } else if (getWinner(board) == 'o'){
+      return { score: 1 };
+    } else if (getWinner(board) == 't'){
+      return { score: 0 };
+    }
+    
+    let moves = [];
+    let possiblePositions = emptySquares(board);
+
+    if (cpu == 0){
+      return {score: 0, position: possiblePositions[Math.floor(Math.random() * possiblePositions.length)]}
+    }
+
+    possiblePositions.forEach((cell) => {
+      const tempBoard = copyArray(board);
+      tempBoard[cell.row][cell.col] = player;
+      const tempScore = minimax(tempBoard, nextPlayer(player), cpu-1).score;
+      moves.push({score: tempScore, position: cell});
+    })
+
+    let bestMove = {score : 1000}
+    if (player == 'o'){
+      bestMove = {score : -1000};
+    }
+
+    moves.forEach((move) => {
+      if ((player == 'o' && move.score > bestMove.score)||(player == 'x' && move.score < bestMove.score)){
+        bestMove = move;
+      }
+    });
+
+    return bestMove;
   }
 
   return (
